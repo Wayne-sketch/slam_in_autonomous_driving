@@ -33,6 +33,7 @@ class EdgeInertial : public g2o::BaseMultiEdge<9, Vec9d> {
      * @param gravity   重力矢量
      * @param weight    权重
      */
+    //构造函数
     EdgeInertial(std::shared_ptr<IMUPreintegration> preinteg, const Vec3d& gravity, double weight = 1.0);
 
     bool read(std::istream& is) override { return false; }

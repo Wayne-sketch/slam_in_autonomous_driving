@@ -65,9 +65,7 @@ bool Optimization::Init(int stage) {
     TBG_ = SE3(SO3(), Vec3d(rtk_ext_t[0], rtk_ext_t[1], rtk_ext_t[2]));
     LOG(INFO) << "TBG = \n" << TBG_.matrix();
 
-    if (stage_ == 2) {
-        LoadLoopCandidates();
-    }
+    LoadLoopCandidates();
     return true;
 }
 
@@ -149,8 +147,8 @@ void Optimization::AddRTKEdges() {
     info_pos(2, 2) = 1.0 / (rtk_height_noise_ratio_ * rtk_pos_noise_ * rtk_height_noise_ratio_ * rtk_pos_noise_);
     Mat3d info_ang = Mat3d::Identity() * 1.0 / (rtk_ang_noise_ * rtk_ang_noise_);
     Mat6d info_all = Mat6d::Identity();
-    info_all.block<3, 3>(0, 0) = info_ang;
-    info_all.block<3, 3>(3, 3) = info_pos;
+    info_all.block<3, 3>(0, 0) = info_pos;
+    info_all.block<3, 3>(3, 3) = info_ang;
 
     LOG(INFO) << "Info of rtk trans: " << info_pos.diagonal().transpose();
 
@@ -217,10 +215,6 @@ void Optimization::AddLidarEdges() {
 }
 
 void Optimization::AddLoopEdges() {
-    if (stage_ == 1) {
-        return;
-    }
-
     const double loop_pos_noise = 0.1, loop_ang_noise = 0.5 * math::kDEG2RAD;  // RTK 观测的噪声
     Mat3d info_pos = Mat3d::Identity() * 1.0 / (loop_pos_noise * loop_pos_noise);
     Mat3d info_ang = Mat3d::Identity() * 1.0 / (loop_ang_noise * loop_ang_noise);

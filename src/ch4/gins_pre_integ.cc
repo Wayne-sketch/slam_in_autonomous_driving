@@ -36,6 +36,7 @@ void GinsPreInteg::SetOptions(sad::GinsPreInteg::Options options) {
     double ga2 = options_.gnss_ang_noise_ * options_.gnss_ang_noise_;
 
     options_.gnss_info_.diagonal() << 1.0 / ga2, 1.0 / ga2, 1.0 / ga2, 1.0 / gp2, 1.0 / gp2, 1.0 / gh2;
+    //给IMU的pre_integ_智能指针赋值
     pre_integ_ = std::make_shared<IMUPreintegration>(options_.preinteg_options_);
 
     double o2 = 1.0 / (options_.odom_var_ * options_.odom_var_);
@@ -88,6 +89,7 @@ void GinsPreInteg::AddGnss(const GNSS& gnss) {
     last_gnss_ = this_gnss_;
 }
 
+//作业第二题，实现通过Odom触发优化的方法
 void GinsPreInteg::AddOdom(const sad::Odom& odom) {
     last_odom_ = odom;
     last_odom_set_ = true;

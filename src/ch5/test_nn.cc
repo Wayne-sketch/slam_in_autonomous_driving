@@ -15,6 +15,8 @@
 #include "common/point_cloud_utils.h"
 #include "common/point_types.h"
 #include "common/sys_utils.h"
+//nanoflann
+#include "ch5/nanoflann_test.h"
 
 DEFINE_string(first_scan_path, "./data/ch5/first.pcd", "第一个点云路径");
 DEFINE_string(second_scan_path, "./data/ch5/second.pcd", "第二个点云路径");
@@ -74,7 +76,7 @@ void EvaluateMatches(const std::vector<std::pair<size_t, size_t>>& truth,
     for (const auto& d : esti) {
         if (d.first != sad::math::kINVALID_ID && d.second != sad::math::kINVALID_ID) {
             effective_esti++;
-
+            //记录假阳性fp
             if (!exist(d, truth)) {
                 fp++;
             }
@@ -82,27 +84,31 @@ void EvaluateMatches(const std::vector<std::pair<size_t, size_t>>& truth,
     }
 
     for (const auto& d : truth) {
+        //记录假阴性
         if (!exist(d, esti)) {
             fn++;
         }
     }
-
+    //计算准确率和召回率
     float precision = 1.0 - float(fp) / effective_esti;
     float recall = 1.0 - float(fn) / truth.size();
     LOG(INFO) << "precision: " << precision << ", recall: " << recall << ", fp: " << fp << ", fn: " << fn;
 }
 
 TEST(CH5_TEST, GRID_NN) {
+    //建立两个点云
     sad::CloudPtr first(new sad::PointCloudType), second(new sad::PointCloudType);
+    //加载两个点云数据
     pcl::io::loadPCDFile(FLAGS_first_scan_path, *first);
     pcl::io::loadPCDFile(FLAGS_second_scan_path, *second);
-
+    //验空
     if (first->empty() || second->empty()) {
         LOG(ERROR) << "cannot load cloud";
         FAIL();
     }
 
     // voxel grid 至 0.05
+    //first second是点云，体素大小怎么没传入
     sad::VoxelGrid(first);
     sad::VoxelGrid(second);
 
@@ -114,17 +120,19 @@ TEST(CH5_TEST, GRID_NN) {
     // 对比不同种类的grid
     sad::GridNN<2> grid0(0.1, sad::GridNN<2>::NearbyType::CENTER), grid4(0.1, sad::GridNN<2>::NearbyType::NEARBY4),
         grid8(0.1, sad::GridNN<2>::NearbyType::NEARBY8);
-    sad::GridNN<3> grid3(0.1, sad::GridNN<3>::NearbyType::NEARBY6);
+    sad::GridNN<3> grid3(0.1, sad::GridNN<3>::NearbyType::NEARBY6), grid14(0.1, sad::GridNN<3>::NearbyType::NEARBY14);
 
     grid0.SetPointCloud(first);
     grid4.SetPointCloud(first);
     grid8.SetPointCloud(first);
     grid3.SetPointCloud(first);
+    grid14.SetPointCloud(first);
 
     // 评价各种版本的Grid NN
     // sorry没有C17的template lambda... 下面必须写的啰嗦一些
     LOG(INFO) << "===================";
     std::vector<std::pair<size_t, size_t>> matches;
+    //形参说明：完美转发传入要评估的函数 函数的名称（可选）用于在日志中标识该函数 要执行函数的次数，默认为10次
     sad::evaluate_and_call(
         [&first, &second, &grid0, &matches]() { grid0.GetClosestPointForCloud(first, second, matches); },
         "Grid0 单线程", 10);
@@ -171,6 +179,28 @@ TEST(CH5_TEST, GRID_NN) {
         [&first, &second, &grid3, &matches]() { grid3.GetClosestPointForCloudMT(first, second, matches); },
         "Grid 3D 多线程", 10);
     EvaluateMatches(truth_matches, matches);
+
+    LOG(INFO) << "===================";
+    sad::evaluate_and_call(
+        [&first, &second, &grid3, &matches]() { grid14.GetClosestPointForCloud(first, second, matches); },
+        "Grid 3D NEARBY14 单线程", 10);
+    EvaluateMatches(truth_matches, matches);
+
+    LOG(INFO) << "===================";
+    sad::evaluate_and_call(
+        [&first, &second, &grid3, &matches]() { grid14.GetClosestPointForCloudMT(first, second, matches); },
+        "Grid 3D NEARBY14 多线程", 10);
+    EvaluateMatches(truth_matches, matches);
+
+    //评估nanoflann最近邻算法
+    //用first创建最近邻匹配对象
+    NanoflannNearestNeighbor nn(first);
+    LOG(INFO) << "===================";
+    sad::evaluate_and_call(
+        [&first, &second, &grid3, &matches]() { nn.match(first, second, matches); },
+        "nanoflann最近邻算法", 10);
+    EvaluateMatches(truth_matches, matches);    
+
 
     SUCCEED();
 }

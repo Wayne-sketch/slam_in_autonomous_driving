@@ -17,6 +17,7 @@ void IMUPreintegration::Integrate(const IMU &imu, double dt) {
     Vec3d acc = imu.acce_ - ba_;  // 加计
 
     // 更新dv, dp, 见(4.13), (4.16)
+    //先更新dp_，因为dp_要用更新前的dv_和dR_
     dp_ = dp_ + dv_ * dt + 0.5f * dR_.matrix() * acc * dt * dt;
     dv_ = dv_ + dR_ * acc * dt;
 
@@ -65,6 +66,7 @@ void IMUPreintegration::Integrate(const IMU &imu, double dt) {
     dt_ += dt;
 }
 
+//需要传入更新后的零偏，(4.32)
 SO3 IMUPreintegration::GetDeltaRotation(const Vec3d &bg) { return dR_ * SO3::exp(dR_dbg_ * (bg - bg_)); }
 
 Vec3d IMUPreintegration::GetDeltaVelocity(const Vec3d &bg, const Vec3d &ba) {
@@ -75,6 +77,7 @@ Vec3d IMUPreintegration::GetDeltaPosition(const Vec3d &bg, const Vec3d &ba) {
     return dp_ + dP_dbg_ * (bg - bg_) + dP_dba_ * (ba - ba_);
 }
 
+//(4.18) 传入预积分初始时刻IMU的状态变量，返回当前时刻，噪声均值都是零，所以不需要计算进来，给协方差矩阵表示不确定度就行了
 NavStated IMUPreintegration::Predict(const sad::NavStated &start, const Vec3d &grav) const {
     SO3 Rj = start.R_ * dR_;
     Vec3d vj = start.R_ * dv_ + start.v_ + grav * dt_;

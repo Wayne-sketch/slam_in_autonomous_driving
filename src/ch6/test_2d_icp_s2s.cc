@@ -8,7 +8,7 @@
 #include "ch6/icp_2d.h"
 #include "ch6/lidar_2d_utils.h"
 #include "common/io_utils.h"
-
+//这段代码是一个测试程序，用于从rosbag文件中读取2D扫描数据并进行配准结果的可视化展示。
 DEFINE_string(bag_path, "./dataset/sad/2dmapping/floor1.bag", "数据包路径");
 DEFINE_string(method, "point2point", "2d icp方法：point2point/point2plane");
 
@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
     FLAGS_stderrthreshold = google::INFO;
     FLAGS_colorlogtostderr = true;
     google::ParseCommandLineFlags(&argc, &argv, true);
-
+    // /通过调用rosbag_io的AddScan2DHandle方法，注册了一个回调函数，当从rosbag中读取到2D扫描数据时会触发该回调函数。
     sad::RosbagIO rosbag_io(fLS::FLAGS_bag_path);
     Scan2d::Ptr last_scan = nullptr, current_scan = nullptr;
 

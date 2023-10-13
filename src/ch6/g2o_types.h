@@ -20,7 +20,7 @@ namespace sad {
 class VertexSE2 : public g2o::BaseVertex<3, SE2> {
    public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
+    //优化变量初始值
     void setToOriginImpl() override { _estimate = SE2(); }
     void oplusImpl(const double* update) override {
         _estimate.translation()[0] += update[0];
@@ -117,15 +117,45 @@ class EdgeSE2 : public g2o::BaseBinaryEdge<3, SE2, VertexSE2, VertexSE2> {
     void computeError() override {
         VertexSE2* v1 = (VertexSE2*)_vertices[0];
         VertexSE2* v2 = (VertexSE2*)_vertices[1];
+        //测量值类型SE2
+        //T_bw * T_wb * T_measure_b
         _error = (v1->estimate().inverse() * v2->estimate() * measurement().inverse()).log();
     }
 
     // TODO jacobian
+    void linearizeOplus() override {
 
+    }
     bool read(std::istream& is) override { return true; }
     bool write(std::ostream& os) const override { return true; }
 
    private:
+};
+
+//P2P边类型
+class EdgeSE2_Point2Point : public g2o::BaseUnaryEdge<2, pcl::PointXY, VertexSE2> {
+   public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+    EdgeSE2_Point2Point(float angle, float theta, float r) : angle_(angle), theta_(theta), r_(r) {}
+
+    void computeError() override {
+        //待优化的顶点：当前scan坐标系位姿
+        VertexSE2* v = (VertexSE2*)_vertices[0];
+        //测量值类型pcl::PointXY 当前scan位姿推出的上一scan坐标系下的坐标减上一scan最近邻激光点坐标
+        _error = v->estimate().translation() - measurement();
+    }
+
+    // TODO jacobian
+    void linearizeOplus() override {
+        _jacobianOplusXi << 1, 0, 0, 1, -r_ * std::sin(angle_ + theta_), r_ * std::cos(angle_ + theta_);
+    }
+    bool read(std::istream& is) override { return true; }
+    bool write(std::ostream& os) const override { return true; }
+
+   private:
+    float angle_ = 0;
+    float theta_ = 0;
+    float r_ = 0;
 };
 
 }  // namespace sad

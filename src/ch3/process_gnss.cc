@@ -75,11 +75,9 @@ int main(int argc, char** argv) {
 
               save_result(fout, gnss_out.unix_time_, gnss_out.utm_pose_);
 
-              if (ui) {
-                  ui->UpdateNavState(
-                      sad::NavStated(gnss_out.unix_time_, gnss_out.utm_pose_.so3(), gnss_out.utm_pose_.translation()));
-                  usleep(1e3);
-              }
+              ui->UpdateNavState(
+                  sad::NavStated(gnss_out.unix_time_, gnss_out.utm_pose_.so3(), gnss_out.utm_pose_.translation()));
+              usleep(1e3);
           }
       }).Go();
 

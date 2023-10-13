@@ -57,7 +57,9 @@ int main(int argc, char** argv) {
     std::ofstream fout("./data/ch4/gins_preintg.txt");
     bool imu_inited = false, gnss_inited = false;
 
+    //主要实现部分
     sad::GinsPreInteg::Options gins_options;
+    //verbose_ 是否输出调试信息
     gins_options.verbose_ = FLAGS_debug;
     sad::GinsPreInteg gins(gins_options);
 

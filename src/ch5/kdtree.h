@@ -118,6 +118,7 @@ class KdTree {
     int k_ = 5;                                   // knn最近邻数量
     std::shared_ptr<KdTreeNode> root_ = nullptr;  // 根节点
     std::vector<Vec3f> cloud_;                    // 输入点云
+    //哈希表存键值对
     std::unordered_map<int, KdTreeNode*> nodes_;  // for bookkeeping
 
     size_t size_ = 0;       // 叶子节点数量

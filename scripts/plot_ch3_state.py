@@ -29,7 +29,7 @@ if __name__ == '__main__':
         plt.plot(path_data[:, 0], path_data[:, 6], 'b')
         plt.plot(path_data[:, 0], path_data[:, 7], 'k')
         plt.title('q')
-        plt.legend(['qw', 'qx', 'qy', 'qz'])
+        plt.legend(['qx', 'qy', 'qz', 'qw'])
 
         # 速度
         plt.subplot(224)

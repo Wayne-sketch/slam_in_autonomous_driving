@@ -45,8 +45,10 @@ class VertexPose : public g2o::BaseVertex<6, SE3> {
         return true;
     }
 
+    //设定被优化顶点的初始值
     virtual void setToOriginImpl() {}
 
+    //顶点更新函数
     virtual void oplusImpl(const double* update_) {
         _estimate.so3() = _estimate.so3() * SO3::exp(Eigen::Map<const Vec3d>(&update_[0]));  // 旋转部分
         _estimate.translation() += Eigen::Map<const Vec3d>(&update_[3]);                     // 平移部分
@@ -57,16 +59,21 @@ class VertexPose : public g2o::BaseVertex<6, SE3> {
 /**
  * 速度顶点，单纯的Vec3d
  */
+//自定义g2o顶点
 class VertexVelocity : public g2o::BaseVertex<3, Vec3d> {
    public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     VertexVelocity() {}
 
+    //读/写函数，一般情况下不需要进行读/写操作的话，仅仅声明一下就可以
     virtual bool read(std::istream& is) { return false; }
     virtual bool write(std::ostream& os) const { return false; }
 
+    //设定被优化顶点的初始值
     virtual void setToOriginImpl() { _estimate.setZero(); }
 
+    //顶点更新函数。这是一个非常重要的函数，主要用于优化过程中增量delta_x的计算。
+    //计算出增量后，就是通过这个函数对估计值进行调整的
     virtual void oplusImpl(const double* update_) { _estimate += Eigen::Map<const Vec3d>(update_); }
 };
 
@@ -91,6 +98,7 @@ class VertexAccBias : public VertexVelocity {
 /**
  * 陀螺随机游走
  */
+//测量值的维度是3，测量值的类型是Vec3d，边连接的两个顶点分别是VertexGyroBias和VertexGyroBias
 class EdgeGyroRW : public g2o::BaseBinaryEdge<3, Vec3d, VertexGyroBias, VertexGyroBias> {
    public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -100,12 +108,17 @@ class EdgeGyroRW : public g2o::BaseBinaryEdge<3, Vec3d, VertexGyroBias, VertexGy
     virtual bool read(std::istream& is) { return false; }
     virtual bool write(std::ostream& os) const { return false; }
 
+    //使用当前顶点的值计算的测量值与真实的测量值之间的误差
     void computeError() {
+        //边的第0个顶点
         const auto* VG1 = dynamic_cast<const VertexGyroBias*>(_vertices[0]);
+        //边的第一个顶点
         const auto* VG2 = dynamic_cast<const VertexGyroBias*>(_vertices[1]);
+        //误差
         _error = VG2->estimate() - VG1->estimate();
     }
 
+    //误差对优化变量的偏导数，也就是我们说的Jacobian
     virtual void linearizeOplus() {
         _jacobianOplusXi = -Mat3d::Identity();
         _jacobianOplusXj.setIdentity();

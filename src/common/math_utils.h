@@ -161,19 +161,21 @@ bool FitLine(std::vector<Eigen::Matrix<S, 3, 1>>& data, Eigen::Matrix<S, 3, 1>& 
     return true;
 }
 
+//这段代码实现了一个函数模板 FitLine2D，用于拟合二维数据点集合（data）的直线，并返回拟合直线的系数（coeffs）。
 template <typename S>
 bool FitLine2D(const std::vector<Eigen::Matrix<S, 2, 1>>& data, Eigen::Matrix<S, 3, 1>& coeffs) {
     if (data.size() < 2) {
         return false;
     }
-
+    //创建一个大小为数据点数量的矩阵 A，其中每一行是一个数据点的坐标，末尾添加了一个1.0，以便拟合常数项。
     Eigen::MatrixXd A(data.size(), 3);
     for (int i = 0; i < data.size(); ++i) {
         A.row(i).head<2>() = data[i].transpose();
         A.row(i)[2] = 1.0;
     }
-
+    //使用奇异值分解（Singular Value Decomposition，SVD）对矩阵 A 进行计算，获取其特征向量。
     Eigen::JacobiSVD svd(A, Eigen::ComputeThinV);
+    //从计算得到的特征向量中取出最后一列，即对应于最小特征值的特征向量，作为拟合直线的系数。
     coeffs = svd.matrixV().col(2);
     return true;
 }

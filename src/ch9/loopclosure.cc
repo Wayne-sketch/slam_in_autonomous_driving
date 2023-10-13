@@ -143,8 +143,9 @@ void LoopClosure::ComputeForCandidate(sad::LoopCandidate& c) {
 
     auto submap_kf1 = build_submap(kf1->id_, true);
 
-    CloudPtr submap_kf2(new PointCloudType);
-    pcl::io::loadPCDFile("./data/ch9/" + std::to_string(kf2->id_) + ".pcd", *submap_kf2);
+    kf2->cloud_.reset(new PointCloudType);
+    pcl::io::loadPCDFile("./data/ch9/" + std::to_string(kf2->id_) + ".pcd", *kf2->cloud_);
+    auto submap_kf2 = kf2->cloud_;
 
     if (submap_kf1->empty() || submap_kf2->empty()) {
         c.ndt_score_ = 0;

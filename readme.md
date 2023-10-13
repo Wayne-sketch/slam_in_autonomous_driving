@@ -2,16 +2,13 @@
 
 本书向读者系统介绍了惯性导航、组合导航、激光建图、激光定位、激光惯导里程计等知识。本仓库是书籍对应的源代码仓库，可以公开使用。
 
-<img src="https://github.com/gaoxiang12/slam_in_autonomous_driving/assets/6635511/734af25b-d866-4dcf-a155-773190ba03d8" width="300" />
-
-
-
 ## 注意
 
-- 本书已于2023.7.10开始印刷，预计在两周内上架。届时我会更新各平台的链接信息。
-- 2023.8.9 本书目前是第二次印刷，在第一次上修正了一部分内容（但没有签名了），详情见代码的推送。
-- 电子工业出版社官方：https://item.jd.com/10080292102089.html
-- 京东自营： https://item.jd.com/13797963.html
+- 本书文本目前处于审阅状态。如果您希望成为本书的审稿人，请联系：gao.xiang.thu at gmail.com
+- 成为审稿人之后，您可以查阅本书每日更新的PDF稿件。同时，您需要在两个月内向我反馈您的意见。您可以通过github
+  issue或邮件形式将意见发送给我。
+- **本书初稿将于2023年3月底close第一轮，我会将稿件交给出版社处理，请各位审稿人及时更新您的审稿意见。当然，后续的issues也会随着出版印次修复，但您的名字可能无法及时更新到致谢列表中。**
+- 如果您有意向为本书写几句推荐语，也请联系我本人。推荐语会出现在本书前言部分或者书的封底部分。
 
 ## 本书的内容编排
 
@@ -76,8 +73,7 @@
     ```bash
     sudo apt install -y ros-noetic-pcl-ros ros-noetic-velodyne-msgs libopencv-dev libgoogle-glog-dev libeigen3-dev libsuitesparse-dev libpcl-dev libyaml-cpp-dev libbtbb-dev libgmock-dev
     ```
-    - Pangolin: 编译安装thirdparty/pangolin.zip，或者 https://github.com/stevenlovegrove/Pangolin
-    - 编译thirdparty/g2o，或者自行编译安装 https://github.com/RainerKuemmerle/g2o 
+    - Pangolin: https://github.com/stevenlovegrove/Pangolin
     - 通过cmake, make安装本repo下的`thirdparty/g2o`库
 - 之后，使用通常的cmake, make方式就可以编译本书所有内容了。例如
 ```bash
@@ -90,7 +86,7 @@ make -j8
 
 ### 适配Ubuntu18.04
 
-为了在Ubuntu18.04上编译运行，需要安装gcc-9，并且使用对应版本的TBB。或者在docker环境下使用。
+为了在Ubuntu18.04上编译运行，需要安装gcc-9，并且使用对应版本的TBB
 
 **安装gcc-9**
 ```bash
@@ -119,38 +115,17 @@ cmake .. -DBUILD_WITH_UBUNTU1804=ON
 make -j8
 ```
 
-**在docker环境下使用**
-```bash
-docker build -t sad:v1 .
-./docker/docker_run.sh
-```
-进入docker容器后
-```bash
-cd ./thirdparty/g2o
-mkdir build
-cd build
-cmake ..
-make -j8
-cd /sad
-mkdir build
-cd build
-cmake ..
-make -j8
-```
-
-## 常见问题
-1. 图形界面在2023年以后特定型号的笔记本端导致桌面卡死（GL硬件兼容性）：https://github.com/gaoxiang12/slam_in_autonomous_driving/issues/67 
-2. 第5章test_nn编译时，gtest报gmock错误：https://github.com/gaoxiang12/slam_in_autonomous_driving/issues/18
-3. 编译器版本问题：https://github.com/gaoxiang12/slam_in_autonomous_driving/issues/4
-4. g2o编译问题（config.h找不到）： https://github.com/gaoxiang12/slam_in_autonomous_driving/issues/95 
-
 ## TODO项
 
+- 一部分插图需要授权
+- 将UI里的不必要信息去除(右侧面板)
+- 整理数据集（增加几个seq）
+- 第9章前端第0个关键帧貌似有问题
 - LioPreiteg在某些数据集上不收敛
 
 ## NOTES
 
-- [已确认] ULHK的IMU似乎和别家的不一样，已经去了gravity, iekf初期可能有问题
+- [已确认] ULHK的IMU似乎和别家的不一样，已经去了gravity
 - [已确认] NCLT的IMU在转包的时候转成了Lidar系，于是Lidar与IMU之间没有旋转的外参（本来Lidar是转了90度的），现在Lidar是X左Y后Z下，原车是X前Y右Z下。本书使用的NCLT数据均基于点云系,
   IMU的杆臂被忽略。
 - [已确认] NCLT的rtk fix并不是非常稳定，平均误差在米级

@@ -71,11 +71,15 @@ class TxtIO {
  */
 class RosbagIO {
    public:
+   //RosbagIO 类的构造函数 构造函数使用 explicit 关键字来禁止隐式类型转换。
     explicit RosbagIO(std::string bag_file, DatasetType dataset_type = DatasetType::NCLT)
         : bag_file_(std::move(bag_file)), dataset_type_(dataset_type) {
         assert(dataset_type_ != DatasetType::UNKNOWN);
     }
-
+    /*rosbag::MessageInstance 包含了以下主要信息：
+    message：一个 boost::shared_ptr，指向消息的实际数据。
+    time：消息的时间戳，表示消息生成的时间。
+    topic：消息所属的话题名称。*/
     using MessageProcessFunction = std::function<bool(const rosbag::MessageInstance &m)>;
 
     /// 一些方便直接使用的topics, messages
@@ -92,18 +96,25 @@ class RosbagIO {
     void Go();
 
     /// 通用处理函数
+    //第一个参数传入话题名称，第二个参数传入函数对象（函数名或lamda表达式）该函数的返回值为bool类型 输入参数为rosbag::MessageInstance类型
     RosbagIO &AddHandle(const std::string &topic_name, MessageProcessFunction func) {
         process_func_.emplace(topic_name, func);
         return *this;
     }
 
     /// 2D激光处理
+    /*在lambda表达式内部，使用instantiate函数将rosbag::MessageInstance转换为sensor_msgs::LaserScan消息。
+    如果转换失败（即msg为nullptr），lambda表达式返回false。否则，它调用带有sensor_msgs::LaserScan消息（msg）作为参数的Scan2DHandle函数对象（f），并返回结果*/
+    //形参： 话题名称 第二个参数输入函数名，返回bool值，对应输入参数为sensor_msgs::LaserScanPtr
     RosbagIO &AddScan2DHandle(const std::string &topic_name, Scan2DHandle f) {
+        //通过lamda表达式给AddHandle传入函数对象 返回值为bool
         return AddHandle(topic_name, [f](const rosbag::MessageInstance &m) -> bool {
+            //该代码将返回一个指向 sensor_msgs::LaserScan 类型的智能指针 msg，可以通过该指针访问和操作消息的数据。
             auto msg = m.instantiate<sensor_msgs::LaserScan>();
             if (msg == nullptr) {
                 return false;
             }
+            //msg是sensor_msgs::LaserScanPtr类型
             return f(msg);
         });
     }

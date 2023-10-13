@@ -16,7 +16,18 @@
 
 #include "common/point_types.h"
 #include "velodyne_msgs/VelodyneScan.h"
-
+/*sensor_msgs::LaserScan 是ROS（Robot Operating System）中定义的一种消息类型，用于表示来自2D激光雷达的扫描数据。
+以下是该消息类型的主要字段：
+std_msgs/Header header：这个消息的元数据。包括时间戳和坐标帧。
+float32 angle_min：开始扫描的角度（弧度）。
+float32 angle_max：结束扫描的角度（弧度）。
+float32 angle_increment：每两次扫描之间的角度差（弧度）。
+float32 time_increment：每两次扫描之间的时间差（秒）。
+float32 scan_time：完成一次完整扫描的时间（秒）。
+float32 range_min：测量范围的最小值（米）。
+float32 range_max：测量范围的最大值（米）。
+float32[] ranges：测量的距离数据，单位为米。数组的长度等于扫描仪扫描的次数，每个元素对应于扫描角度和测量距离。
+float32[] intensities：测量的强度数据。这个字段是可选的，可能不会由所有的雷达设备提供*/
 /// 雷达扫描的一些消息定义和工具函数
 using Scan2d = sensor_msgs::LaserScan;
 using MultiScan2d = sensor_msgs::MultiEchoLaserScan;

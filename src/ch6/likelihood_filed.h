@@ -25,15 +25,19 @@ class LikelihoodField {
     LikelihoodField() { BuildModel(); }
 
     /// 增加一个2D的目标scan
+    //设置目标扫描数据，即用于构建似然场的2D扫描数据
     void SetTargetScan(Scan2d::Ptr scan);
 
     /// 设置被配准的那个scan
+    //设置源扫描数据，即待配准的2D扫描数据。
     void SetSourceScan(Scan2d::Ptr scan);
 
     /// 从占据栅格地图生成一个似然场地图
+    //从占据栅格地图生成似然场图像。
     void SetFieldImageFromOccuMap(const cv::Mat& occu_map);
 
     /// 使用高斯牛顿法配准
+    //使用高斯牛顿法进行配准。
     bool AlignGaussNewton(SE2& init_pose);
 
     /**
@@ -41,13 +45,15 @@ class LikelihoodField {
      * @param init_pose 初始位姿 NOTE 使用submap时，给定相对于该submap的位姿，估计结果也是针对于这个submap的位姿
      * @return
      */
+    //使用g2o库进行配准。
     bool AlignG2O(SE2& init_pose);
 
     /// 获取场函数，转换为RGB图像
+    //获取似然场的图像表示。
     cv::Mat GetFieldImage();
-
+    //判断是否存在超出似然场范围的点。
     bool HasOutsidePoints() const { return has_outside_pts_; }
-
+    //设置当前位姿。
     void SetPose(const SE2& pose) { pose_ = pose; }
 
    private:

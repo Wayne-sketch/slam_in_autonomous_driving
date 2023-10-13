@@ -25,6 +25,7 @@ void EdgeInertial::computeError() {
     Vec3d bg = bg1->estimate();
     Vec3d ba = ba1->estimate();
 
+    //获取零偏更新后的预积分观测量
     const SO3 dR = preint_->GetDeltaRotation(bg);
     const Vec3d dv = preint_->GetDeltaVelocity(bg, ba);
     const Vec3d dp = preint_->GetDeltaPosition(bg, ba);
@@ -39,6 +40,7 @@ void EdgeInertial::computeError() {
     _error << er, ev, ep;
 }
 
+//增量计算函数：误差对优化变量的偏导数
 void EdgeInertial::linearizeOplus() {
     auto* p1 = dynamic_cast<const VertexPose*>(_vertices[0]);
     auto* v1 = dynamic_cast<const VertexVelocity*>(_vertices[1]);
@@ -65,13 +67,30 @@ void EdgeInertial::linearizeOplus() {
     // 估计值
     Vec3d vi = v1->estimate();
     Vec3d vj = v2->estimate();
+    //顶点数据类型是SE3，translation取平移部分
     Vec3d pi = p1->estimate().translation();
     Vec3d pj = p2->estimate().translation();
-
+    //获取零偏更新后的预积分测量值
     const SO3 dR = preint_->GetDeltaRotation(bg);
     const SO3 eR = SO3(dR).inverse() * R1T * R2;
+    //旋转部分残差
     const Vec3d er = eR.log();
     const Mat3d invJr = SO3::jr_inv(eR);
+
+    //2023 06.04
+    //自己修改的部分
+    //思路是在算eR时，在R1基础上加右扰动
+    //微小扰动量dd_phi
+    const vector3d dd_phi;
+    const SO3 eR_dd_phi = SO3(dR).inverse() * (R1*SO3::exp(dd_phi)).inverse() * R2;
+    //数值方法计算这一步的导数
+    Mat3d result = (eR_dd_phi - eR)/dd_phi;
+    //对比result和 Mat3d -invJr * (R2.inverse() * R1).matrix()
+
+    //自己修改的部分end
+
+
+    //残差对优化变量的雅可比矩阵
 
     /// 雅可比矩阵
     /// 注意有3个index, 顶点的，自己误差的，顶点内部变量的
@@ -86,6 +105,7 @@ void EdgeInertial::linearizeOplus() {
     //  ev 3 |
     //  ep 6 |
 
+    //_jacobianOplus[0] 0对应顶点R1，都是残差对R1这个优化变量的雅可比矩阵
     /// 残差对R1, 9x3
     _jacobianOplus[0].setZero();
     // dR/dR1, 4.42
